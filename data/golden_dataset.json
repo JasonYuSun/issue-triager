@@ -1,0 +1,37 @@
+[
+  {
+    "id": "TC001",
+    "title": "CRITICAL: Production API Gateway returning 504 Gateway Timeout in ap-southeast-2",
+    "description": "Our monitoring system (Datadog) has alerted us that the production API gateway for the 'PaymentProcessor' service is failing. Since 08:30 UTC, we are seeing a 40% spike in 504 errors. \n\nEnvironment: Production\nRegion: ap-southeast-2\nImpact: Customers are unable to complete checkout, causing direct revenue loss. \n\nLogs:\n2026-01-01T08:31:05Z ERROR: upstream request timeout to service 'auth-provider'\n2026-01-01T08:31:10Z WARN: Shared-VPC-01 Transit Gateway attachment showing high latency.\n\nPreliminary investigation shows that internal routing via the Shared-VPC-01 seems unstable. This might be related to the network change implemented last night. We need the DevOps team to verify the Transit Gateway routing tables immediately as this is blocking the entire checkout flow.",
+    "expected_priority": "HIGH",
+    "rationale": "Involves Production environment, direct revenue loss, and specifically mentions Shared-VPC-01, which is a defined High-Priority edge case."
+  },
+  {
+    "id": "TC002",
+    "title": "Terraform apply failing in staging: Error: Provider produced inconsistent result after apply",
+    "description": "Hi Support Team, I'm trying to deploy a new microservice in the staging environment but the pipeline is stuck. I've tried re-running the job three times but it keeps failing at the 'terraform apply' stage.\n\nError Message:\n│ Error: Provider produced inconsistent result after apply\n│ When applying changes to aws_appautoscaling_policy.cpu_policy, the plan was check to see if it was consistent with the real-world state.\n\nI think I might have a version mismatch between my local terraform version (1.5.0) and the one used in the GitHub Action runner. I've checked the documentation but couldn't find the specific version requirements for the new 'ScalingModule'. It's not blocking production, but it is delaying our QA testing for the sprint. Can someone take a look at my configuration in repo 'team-alpha-services'?",
+    "expected_priority": "MEDIUM",
+    "rationale": "Non-production environment (Staging). It is a technical 'how-to' or configuration issue that blocks a specific team's QA but doesn't affect the global organization."
+  },
+  {
+    "id": "TC003",
+    "title": "Request to update outdated links in 'Cloud-Onboarding.md'",
+    "description": "While going through the internal developer portal documentation today, I noticed that several links in the 'Onboarding to AWS' section are pointing to the old Confluence space which was deprecated last year. \n\nSpecific Page: /docs/infrastructure/onboarding.md\nBroken Links:\n- http://confluence.old.company/x/infra-setup\n- http://confluence.old.company/x/iam-roles\n\nThese should be updated to point to the new Backstage portal. It's not an urgent issue, but it's a bit confusing for new hires who joined this week. I'd fix it myself but I don't have write access to the documentation repository. No rush on this, just thought I'd flag it for when someone has some downtime.",
+    "expected_priority": "LOW",
+    "rationale": "Documentation update, no impact on system availability or developer workflow, explicitly stated as 'no rush' by the user."
+  },
+  {
+    "id": "TC004",
+    "title": "Urgent!! I can't access the sandbox cluster!!!!!!",
+    "description": "HEY TEAM!!! I AM TRYING TO LOG INTO THE SANDBOX CLUSTER TO TEST A SMALL CSS CHANGE AND MY KUBECTL IS GIVING ME AN ERROR. THIS IS SO FRUSTRATING I HAVE A DEADLINE TODAY FOR MY DEMO. \n\nError: error: You must be logged in to the server (Unauthorized)\n\nI TRIED RESETTING MY PASSWORD BUT IT DIDNT WORK. PLEASE FIX THIS NOW!!!!!!!!! I HAVE BEEN WAITING FOR 10 MINUTES ALREADY. MY BOSS IS WATCHING THIS DEMO AT 4PM.",
+    "expected_priority": "LOW",
+    "rationale": "The user is using 'urgent' language, but the technical context is a Sandbox cluster for a 'small CSS change.' This is an example of 'The Loud User' edge case where the agent must ignore the tone and prioritize based on impact."
+  },
+  {
+    "id": "TC005",
+    "title": "Possible Security Leak: Publicly accessible S3 bucket 'finance-reports-backup'",
+    "description": "During a routine internal security audit, I discovered that the S3 bucket named 'finance-reports-backup-2025' has the 'Block Public Access' setting disabled. \n\nBucket ARN: arn:aws:s3:::finance-reports-backup-2025\nPolicy Snippet:\n{\n  \"Effect\": \"Allow\",\n  \"Principal\": \"*\",\n  \"Action\": \"s3:GetObject\",\n  \"Resource\": \"arn:aws:s3:::finance-reports-backup-2025/*\"\n}\n\nAlthough there are no files in there yet, this bucket is intended for sensitive financial data. If someone uploads a file, it will be immediately accessible to the public internet. This violates our 'Least Privilege' and 'Data Protection' policies. We need to enable public access blocks and verify if any other buckets in this account are misconfigured.",
+    "expected_priority": "HIGH",
+    "rationale": "Potential security breach and data exposure. Security vulnerabilities are categorized as HIGH priority regardless of whether a 'failure' has occurred yet."
+  }
+]
