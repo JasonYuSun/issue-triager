@@ -23,6 +23,7 @@ def triage_issue(title: str, body: str | None, repo: str | None, url: str | None
     system_prompt, user_prompt = build_prompts(criteria_text, title, body, repo, url)
 
     llm_client = GeminiLLM() if settings.GEMINI_API_KEY else MockLLM()
+    logger.info("Using LLM client: %s", llm_client.__class__.__name__)
     raw_output = llm_client.generate(system_prompt, user_prompt)
 
     triage = _parse_llm_output(raw_output, title, body)

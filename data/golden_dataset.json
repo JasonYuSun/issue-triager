@@ -4,34 +4,209 @@
     "title": "CRITICAL: Production API Gateway returning 504 Gateway Timeout in ap-southeast-2",
     "description": "Our monitoring system (Datadog) has alerted us that the production API gateway for the 'PaymentProcessor' service is failing. Since 08:30 UTC, we are seeing a 40% spike in 504 errors. \n\nEnvironment: Production\nRegion: ap-southeast-2\nImpact: Customers are unable to complete checkout, causing direct revenue loss. \n\nLogs:\n2026-01-01T08:31:05Z ERROR: upstream request timeout to service 'auth-provider'\n2026-01-01T08:31:10Z WARN: Shared-VPC-01 Transit Gateway attachment showing high latency.\n\nPreliminary investigation shows that internal routing via the Shared-VPC-01 seems unstable. This might be related to the network change implemented last night. We need the DevOps team to verify the Transit Gateway routing tables immediately as this is blocking the entire checkout flow.",
     "expected_priority": "HIGH",
-    "rationale": "Involves Production environment, direct revenue loss, and specifically mentions Shared-VPC-01, which is a defined High-Priority edge case."
+    "rationale": "Involves Production environment, direct revenue loss, and specifically mentions Shared-VPC-01, a core shared component."
   },
   {
     "id": "TC002",
     "title": "Terraform apply failing in staging: Error: Provider produced inconsistent result after apply",
     "description": "Hi Support Team, I'm trying to deploy a new microservice in the staging environment but the pipeline is stuck. I've tried re-running the job three times but it keeps failing at the 'terraform apply' stage.\n\nError Message:\n│ Error: Provider produced inconsistent result after apply\n│ When applying changes to aws_appautoscaling_policy.cpu_policy, the plan was check to see if it was consistent with the real-world state.\n\nI think I might have a version mismatch between my local terraform version (1.5.0) and the one used in the GitHub Action runner. I've checked the documentation but couldn't find the specific version requirements for the new 'ScalingModule'. It's not blocking production, but it is delaying our QA testing for the sprint. Can someone take a look at my configuration in repo 'team-alpha-services'?",
     "expected_priority": "MEDIUM",
-    "rationale": "Non-production environment (Staging). It is a technical 'how-to' or configuration issue that blocks a specific team's QA but doesn't affect the global organization."
+    "rationale": "Non-production environment (Staging). It blocks a team's workflow but does not affect customers or shared infrastructure."
   },
   {
     "id": "TC003",
     "title": "Request to update outdated links in 'Cloud-Onboarding.md'",
-    "description": "While going through the internal developer portal documentation today, I noticed that several links in the 'Onboarding to AWS' section are pointing to the old Confluence space which was deprecated last year. \n\nSpecific Page: /docs/infrastructure/onboarding.md\nBroken Links:\n- http://confluence.old.company/x/infra-setup\n- http://confluence.old.company/x/iam-roles\n\nThese should be updated to point to the new Backstage portal. It's not an urgent issue, but it's a bit confusing for new hires who joined this week. I'd fix it myself but I don't have write access to the documentation repository. No rush on this, just thought I'd flag it for when someone has some downtime.",
+    "description": "While going through the internal developer portal documentation today, I noticed that several links in the 'Onboarding to AWS' section are pointing to the old Confluence space which was deprecated last year. \n\nSpecific Page: /docs/infrastructure/onboarding.md\nBroken Links:\n- http://confluence.old.company/x/infra-setup\n- http://confluence.old.company/x/iam-roles\n\nThese should be updated to point to the new Backstage portal. It's not an urgent issue, but it's a bit confusing for new hires who joined this week. I'd fix it myself but I don't have write access to the documentation repository.",
     "expected_priority": "LOW",
-    "rationale": "Documentation update, no impact on system availability or developer workflow, explicitly stated as 'no rush' by the user."
+    "rationale": "Documentation update with no impact on technical systems or immediate developer blockers."
   },
   {
     "id": "TC004",
     "title": "Urgent!! I can't access the sandbox cluster!!!!!!",
     "description": "HEY TEAM!!! I AM TRYING TO LOG INTO THE SANDBOX CLUSTER TO TEST A SMALL CSS CHANGE AND MY KUBECTL IS GIVING ME AN ERROR. THIS IS SO FRUSTRATING I HAVE A DEADLINE TODAY FOR MY DEMO. \n\nError: error: You must be logged in to the server (Unauthorized)\n\nI TRIED RESETTING MY PASSWORD BUT IT DIDNT WORK. PLEASE FIX THIS NOW!!!!!!!!! I HAVE BEEN WAITING FOR 10 MINUTES ALREADY. MY BOSS IS WATCHING THIS DEMO AT 4PM.",
     "expected_priority": "LOW",
-    "rationale": "The user is using 'urgent' language, but the technical context is a Sandbox cluster for a 'small CSS change.' This is an example of 'The Loud User' edge case where the agent must ignore the tone and prioritize based on impact."
+    "rationale": "Example of a 'Loud User.' The impact is restricted to a Sandbox environment for a non-critical change (CSS), despite the emotional tone."
   },
   {
     "id": "TC005",
     "title": "Possible Security Leak: Publicly accessible S3 bucket 'finance-reports-backup'",
-    "description": "During a routine internal security audit, I discovered that the S3 bucket named 'finance-reports-backup-2025' has the 'Block Public Access' setting disabled. \n\nBucket ARN: arn:aws:s3:::finance-reports-backup-2025\nPolicy Snippet:\n{\n  \"Effect\": \"Allow\",\n  \"Principal\": \"*\",\n  \"Action\": \"s3:GetObject\",\n  \"Resource\": \"arn:aws:s3:::finance-reports-backup-2025/*\"\n}\n\nAlthough there are no files in there yet, this bucket is intended for sensitive financial data. If someone uploads a file, it will be immediately accessible to the public internet. This violates our 'Least Privilege' and 'Data Protection' policies. We need to enable public access blocks and verify if any other buckets in this account are misconfigured.",
+    "description": "During a routine internal security audit, I discovered that the S3 bucket named 'finance-reports-backup-2025' has the 'Block Public Access' setting disabled. \n\nBucket ARN: arn:aws:s3:::finance-reports-backup-2025\nPolicy Snippet:\n{\n  \"Effect\": \"Allow\",\n  \"Principal\": \"*\",\n  \"Action\": \"s3:GetObject\",\n  \"Resource\": \"arn:aws:s3:::finance-reports-backup-2025/*\"\n}\n\nAlthough there are no files in there yet, this bucket is intended for sensitive financial data. This violates our 'Least Privilege' and 'Data Protection' policies. We need to enable public access blocks immediately.",
     "expected_priority": "HIGH",
-    "rationale": "Potential security breach and data exposure. Security vulnerabilities are categorized as HIGH priority regardless of whether a 'failure' has occurred yet."
+    "rationale": "High-risk security vulnerability involving sensitive financial data infrastructure."
+  },
+  {
+    "id": "TC006",
+    "title": "Global IAM Root Policy Change - Permission Denied for all Admins",
+    "description": "We attempted to roll out a change to the organizational SCP (Service Control Policy) to restrict some regions, but it seems to have locked out all 'Admin' role users from performing any actions in the `master-org` account.\n\nError: User: arn:aws:iam::123456789012:user/admin is not authorized to perform: iam:CreatePolicy on resource: * with an explicit deny in a service control policy.\n\nThis is a critical lockout. No one in the infrastructure team can modify policies to revert the change. We need a break-glass procedure to fix the root SCP as we cannot manage any AWS resources globally right now.",
+    "expected_priority": "HIGH",
+    "rationale": "Global lockout in the master account; affects all administrative capabilities across the organization."
+  },
+  {
+    "id": "TC007",
+    "title": "Jenkins Staging Slave Node - Disk Space 95% Full",
+    "description": "The Jenkins agent 'staging-worker-04' is reporting high disk usage (95%). Several builds for the 'MarketingApp' have failed in the last hour due to 'No space left on device' while pulling Docker images.\n\nLog tail:\n[ERROR] Failed to execute goal com.spotify:dockerfile-maven-plugin:1.4.13:build (default) on project marketing-service: Execution default of goal com.spotify:dockerfile-maven-plugin:1.4.13:build failed: java.io.IOException: No space left on device\n\nWe need someone to clear the docker cache or expand the EBS volume on this instance so the staging builds can resume.",
+    "expected_priority": "MEDIUM",
+    "rationale": "Staging build failure. Blocks the release cycle for one team, but isn't a production outage."
+  },
+  {
+    "id": "TC008",
+    "title": "Request for new IAM Role for 'InternProject'",
+    "description": "Hi, we have a new intern starting on Monday who needs access to read from a specific S3 bucket (`intern-data-bucket`) and run some Lambda functions in the `dev` account. Can you create an IAM role for them with the following permissions? They won't need write access to anything. I've attached the policy document we think is right. No rush, as long as it's ready by Monday morning.",
+    "expected_priority": "MEDIUM",
+    "rationale": "Standard access request for a developer in a Dev environment with a generous lead time."
+  },
+  {
+    "id": "TC009",
+    "title": "Silent Failure: CloudFront not updating cache for 'main.js' in Prod",
+    "description": "We pushed a critical bug fix to the frontend production bucket (`prod-assets-01`) at 09:00 AM, but users are still reporting the old version of the site. We performed a CloudFront invalidation for `/*`, but the invalidation task has been stuck in 'InProgress' for over 45 minutes.\n\nDistribution ID: E123456789ABCD\nInvalidation ID: I987654321EFGH\n\nThis is causing customers to see a broken UI that prevents them from submitting forms. We need DevOps to check why the invalidation is stuck or manually force a refresh on the edge nodes.",
+    "expected_priority": "HIGH",
+    "rationale": "Affects Production UI and customer interactions; involves a core CDN component failing to update."
+  },
+  {
+    "id": "TC010",
+    "title": "Slow performance on RDS Aurora Dev Cluster",
+    "description": "The team is noticing significant lag when running integration tests against the `dev-aurora-db`. Query times have increased from 20ms to 800ms. \n\nSpecs: db.t3.medium\nCPU Utilization: 88%\n\nWe suspect there might be a long-running transaction or we've simply outgrown the instance size. Could you check the performance insights and see if we need to upscale to a `db.r5.large`? This is slowing down development velocity but not affecting any external users.",
+    "expected_priority": "MEDIUM",
+    "rationale": "Performance degradation in Dev environment; impacts developer velocity but not external customers."
+  },
+  {
+    "id": "TC011",
+    "title": "RE: Question about Terraform modules",
+    "description": "Hello, I am new to the team and I am trying to use the internal `vpc-module`. I am a bit confused about the `enable_nat_gateway` variable. Should I set this to true for a private subnet if I need outbound internet access? I looked at the README but it wasn't clear to me. If someone has 5 minutes today to explain the standard pattern we use, I would appreciate it.",
+    "expected_priority": "LOW",
+    "rationale": "General 'how-to' question/knowledge sharing; no technical failure."
+  },
+  {
+    "id": "TC012",
+    "title": "URGENT: Database migration failed - Production database is in 'Incompatible-Parameters' state",
+    "description": "We attempted to change the `max_connections` parameter in the production RDS parameter group and applied it immediately. Now the instance has entered an 'Incompatible-Parameters' state and is completely unreachable.\n\nInstance ID: prod-db-primary\nStatus: incompatible-parameters\n\nThe entire application is down. We cannot revert the change through the console because the instance won't accept the modification while in this state. This is a total site outage.",
+    "expected_priority": "HIGH",
+    "rationale": "Total production outage caused by infrastructure configuration error."
+  },
+  {
+    "id": "TC013",
+    "title": "Github Actions Runner - intermittent 403 errors when pulling from ECR",
+    "description": "Our CI pipelines are intermittently failing during the 'Docker Push/Pull' phase to our internal ECR repository. \n\nError: \nfailed to copy: httpReadSeeker: failed open: unexpected status code https://12345.dkr.ecr.us-east-1.amazonaws.com/v2/my-repo/manifests/latest: 403 Forbidden\n\nIt happens about 1 out of every 5 runs. We think the IAM role attached to the self-hosted runner might have a throttling issue or a misconfigured trust relationship. It's annoying but we can usually just click 're-run' and it works.",
+    "expected_priority": "MEDIUM",
+    "rationale": "Intermittent CI/CD issue; non-blocking but requires investigation to maintain reliability."
+  },
+  {
+    "id": "TC014",
+    "title": "Transit Gateway Route Missing for New Region (eu-west-1)",
+    "description": "We are expanding our services to eu-west-1 and have set up a new VPC. However, the new VPC cannot communicate with our core services in us-east-1 via the Transit Gateway. \n\nWe have checked the TGW attachments and they look 'Available', but a traceroute from a test instance in eu-west-1 stops at the local VPC router. We suspect a missing route entry in the TGW Route Table `tgw-rtb-main`. This is blocking the expansion project launch scheduled for next week.",
+    "expected_priority": "HIGH",
+    "rationale": "Involves Transit Gateway (Shared Infrastructure) and blocks significant business expansion/networking connectivity."
+  },
+  {
+    "id": "TC015",
+    "title": "Typo in the VPN setup guide",
+    "description": "In the 'Engineering-Wiki/VPN-Setup' page, the command to install the client has a typo. It says `brew install --clask openvpn-connect` but it should be `brew install --cask openvpn-connect`. I don't have edit rights to the wiki so I'm reporting it here.",
+    "expected_priority": "LOW",
+    "rationale": "Minor documentation correction."
+  },
+  {
+    "id": "TC016",
+    "title": "Internal Tool 'DevPortal' is down",
+    "description": "The internal developer portal (backstage.internal.company.com) is returning a 502 Bad Gateway. \n\nThis tool is used by developers to view API docs and service ownership. While not a customer-facing outage, it makes it very difficult for the engineering team to find documentation or deploy new services during the day. We've tried restarting the pod in the `mgmt-cluster` but it's stuck in `CrashLoopBackOff`.",
+    "expected_priority": "MEDIUM",
+    "rationale": "Internal tool failure; affects developer productivity but has no external customer impact."
+  },
+  {
+    "id": "TC017",
+    "title": "SECURITY VULNERABILITY: Log4j found in legacy 'ReportingService' container",
+    "description": "Our Twistlock scan has detected a high-severity vulnerability (CVE-2021-44228) in the `reporting-service:v1.2.4` image currently running in Production. \n\nPath: /app/libs/log4j-core-2.14.1.jar\n\nEven though this service is behind a private ALB, the presence of this library violates our security baseline. We need to patch this image and redeploy immediately to comply with our SOC2 requirements.",
+    "expected_priority": "HIGH",
+    "rationale": "Security vulnerability in Production, violates compliance policies."
+  },
+  {
+    "id": "TC018",
+    "title": "Request to increase Lamba concurrency limit for 'SearchTeam'",
+    "description": "Our search-indexing Lambda function is hitting the account's default concurrency limit of 1000 during peak hours, causing throttling and delayed search results for users in the UAT environment. \n\nWe need to increase the regional limit for Lambda Concurrency to 5000 in the `uat` account. We've already optimized the code, this is purely a scaling requirement. This will help us simulate real load during our final UAT phase.",
+    "expected_priority": "MEDIUM",
+    "rationale": "Resource limit increase for UAT/Performance testing."
+  },
+  {
+    "id": "TC019",
+    "title": "SSL Certificate Expiry Warning - internal-tools.company.com",
+    "description": "Our automated cert-checker has flagged that the SSL certificate for `internal-tools.company.com` will expire in 48 hours. This domain hosts our internal CI dashboards and monitoring mirrors.\n\nIssuer: Let's Encrypt\nExpiration: 2026-01-03 12:00:00 UTC\n\nIf this expires, engineers will get browser warnings and API calls between internal tools will fail. We need the certificate to be renewed via ACM/Route53.",
+    "expected_priority": "MEDIUM",
+    "rationale": "Impending failure of internal services; requires proactive action to avoid disruption."
+  },
+  {
+    "id": "TC020",
+    "title": "HELP!! I deleted my own SSH key from the dev server",
+    "description": "I was trying to clean up my `~/.ssh/authorized_keys` file on the dev-jump-box and I accidentally deleted the whole file. Now I can't log back in and I have a script running on there that I need to stop. Can someone please reset my access or put my public key back on there? I'm sorry for being so clumsy!",
+    "expected_priority": "LOW",
+    "rationale": "Individual user error on a non-production server."
+  },
+  {
+    "id": "TC021",
+    "title": "Production EKS Cluster - Node group failing to scale up",
+    "description": "Our production EKS cluster `prod-main-01` is under heavy load, but the Cluster Autoscaler is failing to launch new nodes. \n\nError from Autoscaler logs:\n`FailedToCreateRoute: Route Table 'rtb-12345' is at its limit of 50 routes.`\n\nBecause no new nodes can join the cluster, we have 15 pending pods and the latency for the 'SearchAPI' is skyrocketing. This is a production scalability issue caused by reaching a VPC route table limit.",
+    "expected_priority": "HIGH",
+    "rationale": "Production scalability failure; affects service availability and involves core networking limits."
+  },
+  {
+    "id": "TC022",
+    "title": "Bug in 'DevOps-CLI' tool - `--verbose` flag doesn't work",
+    "description": "I'm using the internal `devops-cli` tool (v2.1.0) and noticed that when I run `devops-cli deploy --verbose`, it doesn't actually show any extra logs. It looks like the flag isn't being passed to the underlying logger. It's not a big deal, but it makes debugging my local deployments much harder.",
+    "expected_priority": "LOW",
+    "rationale": "Minor bug in an internal tool with an easy workaround."
+  },
+  {
+    "id": "TC023",
+    "title": "Terraform State Lock - User 'alice' has been holding lock for 3 hours",
+    "description": "I'm trying to run a plan in the `networking-prod` repo but I'm getting a 'State Locked' error. \n\nLock Info:\nID: 1234-5678-9012\nOperation: OperationTypePlan\nWho: alice@company.com\nCreated: 2026-01-01 07:00:00 UTC\n\nAlice is currently on a flight and unreachable. I need to push a small DNS change. Can someone manually break the DynamoDB lock for this state file so I can proceed? I've verified with the rest of the team that no one else is currently running a deployment.",
+    "expected_priority": "HIGH",
+    "rationale": "Deployment blocker for a production-related task."
+  },
+  {
+    "id": "TC024",
+    "title": "DirectConnect Gateway - BGP Session Down for DC-Location-A",
+    "description": "We just received an automated alert from AWS Health that our DirectConnect BGP session for connection `dx-12345` is DOWN. \n\nStatus: Down\nLocation: Equinix SY3\n\nTraffic should have failed over to our secondary VPN, but we are seeing a drop in throughput for our on-prem to AWS sync jobs. This is affecting the data warehouse ingestion. We need to coordinate with the data center provider to check the physical cross-connect and verify our BGP config.",
+    "expected_priority": "HIGH",
+    "rationale": "Involves DirectConnect (Core Shared Infra); affects hybrid cloud connectivity and data pipelines."
+  },
+  {
+    "id": "TC025",
+    "title": "Request for a new 'Sandbox' AWS Account",
+    "description": "Our team is starting a R&D project to investigate 'Vector Databases' and we'd like a completely isolated Sandbox account to play around with Qdrant and Milvus without affecting any existing environments. We need full admin access within this account. Can you set this up under the 'R&D' OU? We'd like to have it by the end of the week if possible.",
+    "expected_priority": "LOW",
+    "rationale": "New environment request for R&D; no urgency or existing system impact."
+  },
+  {
+    "id": "TC026",
+    "title": "Prod Cluster: OOMKill Loop on 'Auth-Service' pods",
+    "description": "The `auth-service` pods in production are being killed and restarted every 2 minutes due to Out Of Memory (OOM) errors. \n\nKube Events:\n`Reason: OOMKilled` \n`Last State: Terminated` \n\nThis is causing login failures for approximately 10% of our user base as the service capacity is severely reduced. We need to urgently increase the memory limits in the Helm chart or investigate a potential memory leak introduced in the last deploy.",
+    "expected_priority": "HIGH",
+    "rationale": "Production service instability affecting end users; high urgency."
+  },
+  {
+    "id": "TC027",
+    "title": "CI/CD Pipeline: Secret scanning failed on 'main' branch",
+    "description": "The 'Secret-Scan' job in our GitHub Action pipeline failed for the `payment-gateway` repository on the `main` branch. \n\nLog: \n`CRITICAL: Potential AWS Secret Access Key found in 'src/config/helper.js' at line 45.`\n\nIt looks like someone accidentally committed a hardcoded key. We need to rotate this key immediately and purge the git history to ensure the secret is no longer valid. This is a high-priority security cleanup.",
+    "expected_priority": "HIGH",
+    "rationale": "Security incident (exposed credentials) in a core codebase."
+  },
+  {
+    "id": "TC028",
+    "title": "Question: How do I access the ECR images from my local machine?",
+    "description": "Hi, I'm trying to pull a docker image from our ECR repo to my local laptop for debugging. I'm getting an 'unauthorized' error when I run `docker pull`. I've already installed the AWS CLI. Do I need to run a specific login command? Sorry if this is in the docs somewhere, I couldn't find the exact command.",
+    "expected_priority": "LOW",
+    "rationale": "Basic developer support/how-to question."
+  },
+  {
+    "id": "TC029",
+    "title": "Staging Environment: Ingress Controller returning 404 for all paths",
+    "description": "After a cluster upgrade in staging, the NGINX Ingress Controller is returning 404 for every service in the `staging` namespace. \n\nWe've checked the Ingress resources and they seem to be configured correctly. However, the controller logs show: \n`W0101 10:00:00.000000 1 main.go:123] Service 'staging/my-service' does not exist` \n\nIt looks like the controller doesn't have the right RBAC permissions to see services in that namespace after the upgrade. This is blocking the frontend team from testing their changes before the prod release tomorrow.",
+    "expected_priority": "MEDIUM",
+    "rationale": "Staging environment failure; blocks testing for a release but doesn't affect production."
+  },
+  {
+    "id": "TC030",
+    "title": "Request: Enable 'Delete Protection' on all Production Load Balancers",
+    "description": "As part of our disaster recovery hardening project, we've identified that several of our production ALBs do not have 'Delete Protection' enabled. \n\nWe would like the DevOps team to audit the following load balancers and enable this flag to prevent accidental deletion during manual cleanups. \n- alb-prod-public\n- alb-prod-private\n- alb-payments-api\n\nThis is a maintenance task to improve our resilience. Please let us know when this is completed.",
+    "expected_priority": "LOW",
+    "rationale": "Preventative maintenance/best practice improvement; not an active issue or blocker."
   }
 ]

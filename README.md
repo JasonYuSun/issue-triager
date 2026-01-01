@@ -10,11 +10,17 @@ Agentic triage bot for GitHub Issues. It ingests GitHub issue webhooks, dynamica
 - Actions: DRY_RUN=true by default; live GitHub label/comment when DRY_RUN=false and `GITHUB_TOKEN` is provided. Notifications are logged only.
 
 ## Quickstart (local)
+Prereqs: Python 3.11+ available as `python3`.
+
 1) `cp .env.example .env` and adjust values (leave `WEBHOOK_SECRET` empty for local dev).
 2) `make install`
 3) `make run` (serves on `http://localhost:8080`)
 4) `make eval` (golden dataset, must be 100% with the mock)
-5) `make curl-demo` (sends a sample webhook payload locally)
+5) `make curl-demo` (sends a sample webhook payload locally using TC001 from the golden dataset; override with `DEMO_CASE_ID=TC002` etc.)
+
+LLM selection:
+- The server uses Gemini (via the official `google-genai` client) when `GEMINI_API_KEY` is set in the environment (or `.env`); otherwise it falls back to the deterministic MockLLM.
+- `make eval` defaults to MockLLM for deterministic results. Set `USE_GEMINI_FOR_EVAL=1 make eval` if you want to exercise Gemini instead.
 
 ## Testing
 - `make test` runs pytest suite (signature verification, mock LLM golden dataset, vague issue guard, webhook smoke test).

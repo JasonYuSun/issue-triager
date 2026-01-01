@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=61.0"]
+requires = ["setuptools>=61.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -7,7 +7,7 @@ name = "issue-triager"
 version = "0.1.0"
 description = "Agentic triage bot for GitHub issues with dynamic criteria and mock/Gemini LLM backends."
 readme = "README.md"
-requires-python = ">=3.12"
+requires-python = ">=3.11"
 dependencies = [
   "fastapi",
   "uvicorn[standard]",
@@ -18,7 +18,15 @@ dependencies = [
   "pytest-asyncio",
   "rich",
   "python-dotenv",
+  "google-genai",
 ]
+
+[tool.setuptools]
+package-dir = {"" = "."}
+
+[tool.setuptools.packages.find]
+include = ["app*"]
+exclude = ["data*", "docker*", "scripts*", "tests*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

@@ -1,23 +1,26 @@
 from __future__ import annotations
 
 from functools import lru_cache
-from typing import Optional, Set
+from typing import Optional
 
-from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
     """Application configuration loaded from environment variables."""
 
-    model_config = SettingsConfigDict(env_file=".env", env_prefix="", case_sensitive=False)
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_prefix="",
+        case_sensitive=False,
+    )
 
     APP_ENV: str = "local"
     PORT: int = 8080
     LOG_LEVEL: str = "INFO"
 
     WEBHOOK_SECRET: Optional[str] = None
-    ALLOWED_ACTIONS: Set[str] = Field(default_factory=lambda: {"opened", "edited"})
+    ALLOWED_ACTIONS: str = "opened,edited"
     ALLOWED_EVENT: str = "issues"
 
     GEMINI_API_KEY: Optional[str] = None
@@ -28,14 +31,9 @@ class Settings(BaseSettings):
     GITHUB_TOKEN: Optional[str] = None
     GITHUB_API_BASE: str = "https://api.github.com"
 
-    @field_validator("ALLOWED_ACTIONS", mode="before")
-    @classmethod
-    def _parse_actions(cls, value: str | Set[str]) -> Set[str]:
-        if isinstance(value, set):
-            return value
-        if isinstance(value, str):
-            return {item.strip() for item in value.split(",") if item.strip()}
-        raise TypeError("ALLOWED_ACTIONS must be a comma-separated string or a set")
+    @property
+    def allowed_actions(self) -> set[str]:
+        return {item.strip() for item in self.ALLOWED_ACTIONS.split(",") if item.strip()}
 
 
 @lru_cache(maxsize=1)

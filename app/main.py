@@ -41,7 +41,7 @@ async def github_webhook(request: Request) -> dict:
         raise HTTPException(status_code=400, detail=f"Invalid JSON payload: {exc}") from exc
 
     action = payload.get("action")
-    if not action or not is_allowed_action(action, settings.ALLOWED_ACTIONS):
+    if not action or not is_allowed_action(action, settings.allowed_actions):
         raise HTTPException(status_code=400, detail="Unsupported action")
 
     repo = (payload.get("repository") or {}).get("full_name")
