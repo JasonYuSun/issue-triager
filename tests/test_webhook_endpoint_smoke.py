@@ -1,9 +1,17 @@
+import json
+import os
+
 from fastapi.testclient import TestClient
 
+from app.config import get_settings
 from app.main import app
 
 
 def test_webhook_endpoint_smoke():
+    os.environ["DRY_RUN"] = "true"
+    os.environ["WEBHOOK_SECRET"] = ""
+    get_settings.cache_clear()
+
     client = TestClient(app)
     payload = {
         "action": "opened",
@@ -16,7 +24,10 @@ def test_webhook_endpoint_smoke():
         },
     }
 
-    response = client.post("/webhook/github", json=payload)
+    body_str = json.dumps(payload)
+    headers = {"Content-Type": "application/json"}
+
+    response = client.post("/webhook/github", content=body_str, headers=headers)
     assert response.status_code == 200, response.text
     body = response.json()
     assert body["triage"]["priority"] in {"LOW", "MEDIUM", "HIGH"}

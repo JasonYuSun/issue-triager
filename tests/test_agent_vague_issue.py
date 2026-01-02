@@ -6,4 +6,4 @@ def test_vague_issue_forces_low_priority():
     body = "Broken"
     result = triage_issue(title, body, repo=None, url=None)
     assert result.priority == "LOW"
-    assert result.missing_info_requests
+    assert "Rule D: Insufficient Information" in result.matched_rules

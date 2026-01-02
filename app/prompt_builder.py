@@ -24,7 +24,6 @@ def build_prompts(
           "labels": ["priority:high|medium|low"],
           "reasoning": "short rationale",
           "confidence": 0.0-1.0,
-          "missing_info_requests": ["questions to ask if info is missing"],
           "matched_rules": ["rules or heuristics applied"]
         }}
         Example:
@@ -34,7 +33,6 @@ def build_prompts(
           "labels": ["priority:high"],
           "reasoning": "Production outage impacting customers.",
           "confidence": 0.91,
-          "missing_info_requests": [],
           "matched_rules": ["HIGH: Production impact"]
         }}
         """

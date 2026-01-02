@@ -281,14 +281,13 @@ In app/schemas.py define:
 - labels: list[str]
 - reasoning: str
 - confidence: float (0..1)
-- missing_info_requests: list[str]
 - matched_rules: list[str]
 
 Validation rules:
 - confidence must be between 0 and 1.
 - labels must include exactly one label of the form `priority:high|medium|low` matching priority.
 - reasoning must be non-empty.
-- If issue is “too vague” (<10 words in title+body combined OR body empty and title very short), then priority MUST be LOW and missing_info_requests MUST be non-empty. (Enforce in agent post-validation as a safety net.)
+- If issue is “too vague” (<10 words in title+body combined OR body empty and title very short), then priority MUST be LOW (enforce in agent post-validation as a safety net).
 
 3) Define minimal GitHub webhook payload models (only fields you need) OR parse dict safely. But ensure you reliably extract:
 - repository.full_name
@@ -319,7 +318,6 @@ If JSON invalid or schema validation fails -> return a fallback TriageResult:
 - labels=["priority:low"]
 - reasoning="LLM output invalid; requesting more information."
 - confidence=0.0
-- missing_info_requests=["Please provide environment, error logs, and steps to reproduce."]
 - matched_rules=["Fallback:InvalidLLMOutput"]
 
 ================================================================================
@@ -367,7 +365,7 @@ Implement app/agent.py:
 - Builds prompt
 - Calls chosen LLM client (mock or gemini)
 - Validates/normalizes labels
-- Applies Rule D safety net if too vague (force LOW + missing_info_requests)
+- Applies Rule D safety net if too vague (force LOW and record the matched rule)
 - Returns result
 
 Also implement an “action plan”:
@@ -375,7 +373,7 @@ Also implement an “action plan”:
 - If DRY_RUN=true: do NOT call GitHub; return dict with intended API calls.
 - If DRY_RUN=false: require GITHUB_TOKEN; call GitHub:
    1) apply label `priority:xxx`
-   2) post comment including reasoning, confidence, matched_rules, missing_info_requests
+   2) post comment including reasoning, confidence, matched_rules
 - Notification path: just log a message when action_required=true (no slack, no pubsub).
 
 ================================================================================
@@ -438,7 +436,7 @@ Implement pytest tests:
    - run triage_issue with mock (force mock by ensuring GEMINI_API_KEY not set)
    - assert predicted == expected for all 5
 3) test_agent_vague_issue.py:
-   - title/body short -> must be LOW with missing_info_requests non-empty
+   - title/body short -> must be LOW and include the Rule D match
 4) test_webhook_endpoint_smoke.py:
    - use FastAPI TestClient
    - POST sample payload

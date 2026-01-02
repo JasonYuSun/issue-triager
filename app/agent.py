@@ -117,7 +117,6 @@ def _normalize_triage_dict(data: Dict[str, Any]) -> Dict[str, Any]:
     labels = [priority_label] + other_labels
 
     reasoning = data.get("reasoning") or "LLM output missing reasoning."
-    missing_info = data.get("missing_info_requests") or []
     matched_rules = data.get("matched_rules") or []
 
     return {
@@ -126,7 +125,6 @@ def _normalize_triage_dict(data: Dict[str, Any]) -> Dict[str, Any]:
         "labels": labels,
         "reasoning": reasoning,
         "confidence": confidence,
-        "missing_info_requests": missing_info,
         "matched_rules": matched_rules,
     }
 
@@ -136,9 +134,6 @@ def _apply_vague_guard(result: TriageResult, title: str, body: str | None) -> Tr
     word_count = len(content.split())
     if word_count < 10 or not content:
         label = "priority:low"
-        missing = result.missing_info_requests or [
-            "Please provide environment, error logs, and steps to reproduce."
-        ]
         matched = list(result.matched_rules)
         if "Rule D: Insufficient Information" not in matched:
             matched.append("Rule D: Insufficient Information")
@@ -148,7 +143,6 @@ def _apply_vague_guard(result: TriageResult, title: str, body: str | None) -> Tr
             labels=[label],
             reasoning="Issue too vague to triage confidently; requesting more details.",
             confidence=min(result.confidence, 0.2),
-            missing_info_requests=missing,
             matched_rules=matched,
         )
     return result
@@ -161,13 +155,11 @@ def _fallback_result() -> TriageResult:
         labels=["priority:low"],
         reasoning="LLM output invalid; requesting more information.",
         confidence=0.0,
-        missing_info_requests=["Please provide environment, error logs, and steps to reproduce."],
         matched_rules=["Fallback:InvalidLLMOutput"],
     )
 
 
 def _build_comment_body(result: TriageResult, issue_url: str) -> str:
-    missing_info = "\n".join(f"- {item}" for item in result.missing_info_requests) if result.missing_info_requests else "None."
     matched_rules = ", ".join(result.matched_rules) if result.matched_rules else "None"
     return (
         "Automated triage result:\n"
@@ -175,6 +167,5 @@ def _build_comment_body(result: TriageResult, issue_url: str) -> str:
         f"- Confidence: {result.confidence}\n"
         f"- Reasoning: {result.reasoning}\n"
         f"- Matched rules: {matched_rules}\n"
-        f"- Missing info requests:\n{missing_info}\n"
         f"- Issue: {issue_url}"
     )

@@ -13,7 +13,6 @@ class TriageResult(BaseModel):
     labels: List[str] = Field(default_factory=list)
     reasoning: str
     confidence: float
-    missing_info_requests: List[str] = Field(default_factory=list)
     matched_rules: List[str] = Field(default_factory=list)
 
     @field_validator("confidence")

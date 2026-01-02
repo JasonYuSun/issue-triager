@@ -31,7 +31,6 @@ class MockLLM(BaseLLM):
                     "labels": [f"priority:{golden_match.lower()}"],
                     "reasoning": "Matched golden dataset case.",
                     "confidence": 0.99,
-                    "missing_info_requests": [],
                     "matched_rules": ["GoldenDatasetMatch"],
                 }
             )
@@ -43,15 +42,11 @@ class MockLLM(BaseLLM):
         matched_rules: List[str] = []
         action_required = False
         confidence = 0.75
-        missing_info_requests: List[str] = []
         reasoning = "Defaulting to LOW priority based on provided context."
 
         if word_count < 10:
             priority = "LOW"
             matched_rules.append("Rule D: Insufficient Information")
-            missing_info_requests = [
-                "Please provide environment, error logs, and steps to reproduce."
-            ]
             reasoning = "Issue too vague; requesting more details."
             confidence = 0.2
         else:
@@ -112,7 +107,6 @@ class MockLLM(BaseLLM):
             "labels": labels,
             "reasoning": reasoning,
             "confidence": round(confidence, 3),
-            "missing_info_requests": missing_info_requests,
             "matched_rules": matched_rules,
         }
         return json.dumps(result)
