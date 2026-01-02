@@ -5,7 +5,7 @@ Agentic triage bot for GitHub Issues. It ingests GitHub issue webhooks, dynamica
 ## Architecture
 - FastAPI webhook endpoint at `/webhook/github`.
 - Dynamic context injection: `TRIAGE_CRITERIA.md` is read on every request.
-- LLM backends: rules-based `MockLLM` (default, deterministic) or Gemini Developer API when `GEMINI_API_KEY` is set.
+- LLM backends: rules-based `MockLLM` (default, deterministic) or OpenAI ChatGPT when `OPENAI_API_KEY` is set.
 - Safety: webhook signature verification (HMAC SHA256) when `WEBHOOK_SECRET` is configured; fallback guard for vague issues forces LOW priority and asks for details.
 - Actions: DRY_RUN=true by default; live GitHub label/comment when DRY_RUN=false and `GITHUB_TOKEN` is provided. Notifications are logged only.
 
@@ -19,8 +19,8 @@ Prereqs: Python 3.11+ available as `python3`.
 5) `make curl-demo` (sends a sample webhook payload locally using TC001 from the golden dataset; override with `DEMO_CASE_ID=TC002` etc.)
 
 LLM selection:
-- The server uses Gemini (via the official `google-genai` client) when `GEMINI_API_KEY` is set in the environment (or `.env`); otherwise it falls back to the deterministic MockLLM.
-- `make eval` defaults to MockLLM for deterministic results. Set `USE_GEMINI_FOR_EVAL=1 make eval` if you want to exercise Gemini instead.
+- The server uses ChatGPT (via the official `openai` client) when `OPENAI_API_KEY` is set in the environment (or `.env`); otherwise it falls back to the deterministic MockLLM.
+- `make eval` defaults to MockLLM for deterministic results. Set `USE_CHATGPT_FOR_EVAL=1 make eval` if you want to exercise ChatGPT instead.
 
 ## Testing
 - `make test` runs pytest suite (signature verification, mock LLM golden dataset, vague issue guard, webhook smoke test).
@@ -48,8 +48,8 @@ LLM selection:
 - Default `DRY_RUN=true`: response includes intended label/comment without calling GitHub.
 - To enable live actions: set `DRY_RUN=false` and `GITHUB_TOKEN=<PAT with repo scope>`. The bot adds `priority:*` label and posts a comment summarizing reasoning/matched rules/missing info.
 
-## Gemini mode
-- Set `GEMINI_API_KEY` (and optionally `GEMINI_MODEL`) to use Gemini Developer API instead of the mock.
+## ChatGPT mode
+- Set `OPENAI_API_KEY` (and optionally `OPENAI_MODEL`) to use ChatGPT instead of the mock.
 - The LLM must return strict JSON; invalid responses fall back to a LOW priority result asking for more info.
 
 ## Local simulation via curl helper
@@ -59,7 +59,7 @@ LLM selection:
 - `app/main.py`: FastAPI webhook handler.
 - `app/agent.py`: orchestration, validation, action plan.
 - `app/llm/mock.py`: deterministic rules hitting 100% on the golden dataset.
-- `app/llm/gemini.py`: minimal Gemini Developer API client.
+- `app/llm/chatgpt.py`: minimal ChatGPT client.
 - `app/webhook_security.py`: HMAC SHA256 verification.
 - `data/golden_dataset.json`: evaluation cases TC001–TC005.
 - `TRIAGE_CRITERIA.md`: triage policy loaded at runtime; edits here change behavior without code changes.

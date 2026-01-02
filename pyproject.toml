@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "issue-triager"
 version = "0.1.0"
-description = "Agentic triage bot for GitHub issues with dynamic criteria and mock/Gemini LLM backends."
+description = "Agentic triage bot for GitHub issues with dynamic criteria and mock/ChatGPT LLM backends."
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
@@ -18,7 +18,7 @@ dependencies = [
   "pytest-asyncio",
   "rich",
   "python-dotenv",
-  "google-genai",
+  "openai>=1.60.0",
 ]
 
 [tool.setuptools]

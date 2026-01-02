@@ -11,11 +11,11 @@ from app.config import get_settings
 
 
 def ensure_mock_llm() -> None:
-    if os.getenv("USE_GEMINI_FOR_EVAL"):
-        print("USE_GEMINI_FOR_EVAL is set; using Gemini if configured.")
+    if os.getenv("USE_CHATGPT_FOR_EVAL"):
+        print("USE_CHATGPT_FOR_EVAL is set; using ChatGPT if configured.")
         return
-    # Override any .env/default GEMINI_API_KEY so eval remains deterministic.
-    os.environ["GEMINI_API_KEY"] = ""
+    # Override any .env/default OPENAI_API_KEY so eval remains deterministic.
+    os.environ["OPENAI_API_KEY"] = ""
     try:
         get_settings.cache_clear()  # type: ignore[attr-defined]
     except Exception:

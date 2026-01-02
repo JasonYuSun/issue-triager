@@ -16,23 +16,23 @@ Unlike a simple keyword-based script, an Agentic AI solution can:
 - **Make Judgments**: Compare the issue against a dynamic, version-controlled Triage Criteria document.
 - **Take Action**: Not just categorize, but perform API calls to label issues, leave explanatory comments, and trigger external notifications.
 
-## 4. Technical Architecture (GCP Serverless)
+## 4. Technical Architecture (Serverless-friendly)
 The architecture is designed for high readability, minimal maintenance, and cost-efficiency.
 
 ### Tech Stack
 - **Language**: Python 3.12 (Clean, type-hinted code).
 - **Web Framework**: FastAPI (For handling GitHub webhooks with high performance and readability).
-- **Compute**: Google Cloud Run (Serverless, scales to zero, easy to deploy).
-- **AI Engine**: Vertex AI (Gemini 3 Flash) (Low latency, high reasoning capability).
+- **Compute**: Container-friendly serverless platform (scales to zero, easy to deploy).
+- **AI Engine**: OpenAI ChatGPT (e.g., gpt-4o-mini) (Low latency, high reasoning capability).
 - **Data Validation**: Pydantic (To ensure the LLM returns structured JSON).
-- **CI/CD**: GitHub Actions (For automated deployment to GCP).
+- **CI/CD**: GitHub Actions (for automated deployment).
 
 ## 5. Agentic Interaction Flow
-This section describes how the Python Agent facilitates the conversation between the GitHub Event and the LLM (Gemini).
+This section describes how the Python Agent facilitates the conversation between the GitHub Event and the LLM (ChatGPT).
 
 ### Step 1: Trigger & Context Assembly
 - **User Event**: A developer opens a GitHub Issue.
-- **Webhook**: GitHub sends a POST request to the GCP Cloud Run endpoint.
+- **Webhook**: GitHub sends a POST request to the deployed `/webhook/github` endpoint.
 
 When the webhook is received, the Agent performs "Dynamic Context Injection":
 
@@ -60,7 +60,7 @@ The Agent does not just "suggest"; it "acts" by consuming the JSON output:
 
 - **Labeling**: Calls the GitHub API to apply the `priority:{level}` label.
 - **Commenting**: Posts the reasoning as a public comment on the issue. This provides transparency to the user and the support team.
-- **Notification**: If `action_required` is True, the Agent triggers an outbound notification (via GCP Pub/Sub) to Slack/PagerDuty to alert the on-call engineer.
+- **Notification**: If `action_required` is True, the Agent triggers an outbound notification (e.g., to Slack/PagerDuty) to alert the on-call engineer.
 
 ## 6. The "Brain": TRIAGE_CRITERIA.md
 The agent uses this document as its System Instruction. It is stored in the repository, allowing the team to update triage logic via Pull Requests without changing a single line of Python code.
@@ -155,9 +155,9 @@ This script automates the "vibe check" into a quantitative report.
 - **Reporting**: Generates an Accuracy Score (%) and a Confusion Matrix.
 
 ## 8. Future Roadmap
-- Multimodal Support: Use Gemini's multimodal capabilities to analyze screenshots of errors or architecture diagrams attached to issues.
-- Issue-Resolution-Recommender: Use Gemini's long context window to build a system that can analyze a large number of issues and recommend most similar issues as reference to resolve the issue.
+- Multimodal Support: Use ChatGPT's multimodal capabilities to analyze screenshots of errors or architecture diagrams attached to issues.
+- Issue-Resolution-Recommender: Use ChatGPT's long context window to build a system that can analyze a large number of issues and recommend most similar issues as reference to resolve the issue.
 
 ## 9. Security & Compliance
-- Data Residency: Deployment on GCP ensures data stays within the specified region (e.g., australia-southeast1).
+- Data Residency: Deploy within your chosen cloud region (e.g., australia-southeast1).
 - Anonymization: Implementation of a pre-processing layer to scrub credentials and PII from issue descriptions before LLM ingestion.

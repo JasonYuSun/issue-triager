@@ -23,8 +23,8 @@ class Settings(BaseSettings):
     ALLOWED_ACTIONS: str = "opened,edited"
     ALLOWED_EVENT: str = "issues"
 
-    GEMINI_API_KEY: Optional[str] = None
-    GEMINI_MODEL: str = "gemini-1.5-flash"
+    OPENAI_API_KEY: Optional[str] = None
+    OPENAI_MODEL: str = "gpt-4o-mini"
     LLM_TIMEOUT_SECONDS: int = 20
 
     DRY_RUN: bool = True
