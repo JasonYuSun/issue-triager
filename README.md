@@ -40,7 +40,7 @@ LLM selection:
 
 ## DRY_RUN vs live actions
 - Default `DRY_RUN=true`: response includes intended label/comment without calling GitHub.
-- To enable live actions: set `DRY_RUN=false` and `GITHUB_TOKEN=<PAT with repo scope>`. The bot adds `priority:*` label and posts a comment summarizing reasoning and matched rules. See `doc/github-pat.md` for PAT setup.
+- To enable live actions: set `DRY_RUN=false` and `GITHUB_TOKEN=<PAT with repo scope>`. The bot adds `priority:*` label and posts a comment summarizing reasoning and matched rules using PyGithub. See `doc/github-pat.md` for PAT setup.
 
 ## ChatGPT mode
 - Set `OPENAI_API_KEY` (and optionally `OPENAI_MODEL`) to use ChatGPT instead of the mock.

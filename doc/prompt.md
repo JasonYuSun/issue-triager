@@ -162,7 +162,6 @@ issue-triager/
       base.py              # LLM interface protocol
       mock.py              # deterministic rules-based mock -> MUST hit 100% on golden dataset
     agent.py               # orchestrates: load policy -> call llm -> validate -> action plan
-    github_client.py       # GitHub REST client (label + comment)
     webhook_security.py    # signature verification + event filtering
     demo_payloads.py       # functions to generate sample webhook payloads for curl demo
     logging_utils.py
@@ -191,6 +190,7 @@ Use uv-style or pip editable installation is fine, but keep it simple:
 - pydantic
 - pydantic-settings
 - httpx
+- PyGithub
 - pytest
 - pytest-asyncio
 - rich (optional for prettier eval output; keep optional/minimal)

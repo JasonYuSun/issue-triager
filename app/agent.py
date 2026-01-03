@@ -7,8 +7,9 @@ from pydantic import ValidationError
 
 import os
 
+from github import Github
+
 from .config import get_settings
-from .github_client import GitHubClient
 from .llm.chatgpt import ChatGPTLLM
 from .llm.mock import MockLLM
 from .logging_utils import get_logger
@@ -58,10 +59,13 @@ async def execute_actions(
     if not settings.GITHUB_TOKEN:
         raise ValueError("GITHUB_TOKEN is required when DRY_RUN is False")
 
-    client = GitHubClient(token=settings.GITHUB_TOKEN, base_url=settings.GITHUB_API_BASE)
+    gh = Github(login_or_token=settings.GITHUB_TOKEN, base_url=settings.GITHUB_API_BASE)
+    issue = gh.get_repo(repo_full_name).get_issue(number=issue_number)
 
-    label_resp = await client.add_label(repo_full_name, issue_number, label)
-    comment_resp = await client.add_comment(repo_full_name, issue_number, comment_body)
+    # PyGithub returns objects; keep responses lightweight for logging/testing.
+    label_resp = [lbl.name for lbl in issue.add_to_labels(label)]
+    comment_obj = issue.create_comment(comment_body)
+    comment_resp = {"id": comment_obj.id, "url": comment_obj.html_url}
 
     if result.notify_on_call:
         logger.info("Action required for %s#%s: would notify on-call.", repo_full_name, issue_number)
