@@ -18,18 +18,17 @@ Unlike a simple keyword-based script, an Agentic AI solution can:
 
 - **Understand Long Context**: Interpret the nuance of an issue description.
 - **Make Judgments**: Compare the issue against a dynamic, version-controlled Triage Criteria document.
-- **Take Action**: Not just categorize, but perform API calls to label issues, leave explanatory comments, and trigger external notifications.
+- **Take Action**: Not just categorize, but perform API calls to label issues, leave explanatory comments, and log when on-call attention would be needed.
 
-## 4. Technical Architecture (Serverless-friendly)
-The architecture is designed for high readability, minimal maintenance, and cost-efficiency.
+## 4. Technical Architecture
+The architecture is designed for high readability, minimal maintenance, and local-first demos.
 
 ### Tech Stack
 - **Language**: Python 3.12 (Clean, type-hinted code).
 - **Web Framework**: FastAPI (For handling GitHub webhooks with high performance and readability).
-- **Compute**: Container-friendly serverless platform (scales to zero, easy to deploy).
+- **Compute**: Container-friendly service that runs locally or can be hosted.
 - **AI Engine**: OpenAI ChatGPT (e.g., gpt-4o-mini) (Low latency, high reasoning capability).
 - **Data Validation**: Pydantic (To ensure the LLM returns structured JSON).
-- **CI/CD**: GitHub Actions (for automated deployment).
 
 ## 5. Agentic Interaction Flow
 This section describes how the Python Agent facilitates the conversation between the GitHub Event and the LLM (ChatGPT).
@@ -64,7 +63,7 @@ The Agent does not just "suggest"; it "acts" by consuming the JSON output:
 
 - **Labeling**: Calls the GitHub API to apply the `priority:{level}` label.
 - **Commenting**: Posts the reasoning as a public comment on the issue. This provides transparency to the user and the support team.
-- **Notification**: If `action_required` is True, the Agent triggers an outbound notification (e.g., to Slack/PagerDuty) to alert the on-call engineer.
+- **Notification**: If `action_required` is True, the Agent logs that on-call notification would be sent (no external integrations in this version).
 
 ## 6. The "Brain": TRIAGE_CRITERIA.md
 The agent uses this document as its System Instruction. It is stored in the repository, allowing the team to update triage logic via Pull Requests without changing a single line of Python code.
@@ -108,47 +107,7 @@ If an issue contains fewer than 10 words or is too vague to categorize (e.g., "i
 ```
 
 ## 7. Reliability & The "Golden Dataset"
-To prove the agent's value to stakeholders, we use a Golden Dataset to validate accuracy. For example:
-
-```json
-[
-  {
-    "id": "TC001",
-    "title": "CRITICAL: Production API Gateway returning 504 Gateway Timeout in ap-southeast-2",
-    "description": "Our monitoring system (Datadog) has alerted us that the production API gateway for the 'PaymentProcessor' service is failing. Since 08:30 UTC, we are seeing a 40% spike in 504 errors. \n\nEnvironment: Production\nRegion: ap-southeast-2\nImpact: Customers are unable to complete checkout, causing direct revenue loss. \n\nLogs:\n2026-01-01T08:31:05Z ERROR: upstream request timeout to service 'auth-provider'\n2026-01-01T08:31:10Z WARN: Shared-VPC-01 Transit Gateway attachment showing high latency.\n\nPreliminary investigation shows that internal routing via the Shared-VPC-01 seems unstable. This might be related to the network change implemented last night. We need the DevOps team to verify the Transit Gateway routing tables immediately as this is blocking the entire checkout flow.",
-    "expected_priority": "HIGH",
-    "rationale": "Involves Production environment, direct revenue loss, and specifically mentions Shared-VPC-01, which is a defined High-Priority edge case."
-  },
-  {
-    "id": "TC002",
-    "title": "Terraform apply failing in staging: Error: Provider produced inconsistent result after apply",
-    "description": "Hi Support Team, I'm trying to deploy a new microservice in the staging environment but the pipeline is stuck. I've tried re-running the job three times but it keeps failing at the 'terraform apply' stage.\n\nError Message:\n│ Error: Provider produced inconsistent result after apply\n│ When applying changes to aws_appautoscaling_policy.cpu_policy, the plan was check to see if it was consistent with the real-world state.\n\nI think I might have a version mismatch between my local terraform version (1.5.0) and the one used in the GitHub Action runner. I've checked the documentation but couldn't find the specific version requirements for the new 'ScalingModule'. It's not blocking production, but it is delaying our QA testing for the sprint. Can someone take a look at my configuration in repo 'team-alpha-services'?",
-    "expected_priority": "MEDIUM",
-    "rationale": "Non-production environment (Staging). It is a technical 'how-to' or configuration issue that blocks a specific team's QA but doesn't affect the global organization."
-  },
-  {
-    "id": "TC003",
-    "title": "Request to update outdated links in 'Cloud-Onboarding.md'",
-    "description": "While going through the internal developer portal documentation today, I noticed that several links in the 'Onboarding to AWS' section are pointing to the old Confluence space which was deprecated last year. \n\nSpecific Page: /docs/infrastructure/onboarding.md\nBroken Links:\n- http://confluence.old.company/x/infra-setup\n- http://confluence.old.company/x/iam-roles\n\nThese should be updated to point to the new Backstage portal. It's not an urgent issue, but it's a bit confusing for new hires who joined this week. I'd fix it myself but I don't have write access to the documentation repository. No rush on this, just thought I'd flag it for when someone has some downtime.",
-    "expected_priority": "LOW",
-    "rationale": "Documentation update, no impact on system availability or developer workflow, explicitly stated as 'no rush' by the user."
-  },
-  {
-    "id": "TC004",
-    "title": "Urgent!! I can't access the sandbox cluster!!!!!!",
-    "description": "HEY TEAM!!! I AM TRYING TO LOG INTO THE SANDBOX CLUSTER TO TEST A SMALL CSS CHANGE AND MY KUBECTL IS GIVING ME AN ERROR. THIS IS SO FRUSTRATING I HAVE A DEADLINE TODAY FOR MY DEMO. \n\nError: error: You must be logged in to the server (Unauthorized)\n\nI TRIED RESETTING MY PASSWORD BUT IT DIDNT WORK. PLEASE FIX THIS NOW!!!!!!!!! I HAVE BEEN WAITING FOR 10 MINUTES ALREADY. MY BOSS IS WATCHING THIS DEMO AT 4PM.",
-    "expected_priority": "LOW",
-    "rationale": "The user is using 'urgent' language, but the technical context is a Sandbox cluster for a 'small CSS change.' This is an example of 'The Loud User' edge case where the agent must ignore the tone and prioritize based on impact."
-  },
-  {
-    "id": "TC005",
-    "title": "Possible Security Leak: Publicly accessible S3 bucket 'finance-reports-backup'",
-    "description": "During a routine internal security audit, I discovered that the S3 bucket named 'finance-reports-backup-2025' has the 'Block Public Access' setting disabled. \n\nBucket ARN: arn:aws:s3:::finance-reports-backup-2025\nPolicy Snippet:\n{\n  \"Effect\": \"Allow\",\n  \"Principal\": \"*\",\n  \"Action\": \"s3:GetObject\",\n  \"Resource\": \"arn:aws:s3:::finance-reports-backup-2025/*\"\n}\n\nAlthough there are no files in there yet, this bucket is intended for sensitive financial data. If someone uploads a file, it will be immediately accessible to the public internet. This violates our 'Least Privilege' and 'Data Protection' policies. We need to enable public access blocks and verify if any other buckets in this account are misconfigured.",
-    "expected_priority": "HIGH",
-    "rationale": "Potential security breach and data exposure. Security vulnerabilities are categorized as HIGH priority regardless of whether a 'failure' has occurred yet."
-  }
-]
-```
+To prove the agent's value to stakeholders, we use a Golden Dataset to validate accuracy. The repo includes 30 cases in `data/golden_dataset.json`; the mock LLM is expected to classify all of them deterministically.
 
 ### Evaluation Script (eval_triage.py)
 This script automates the "vibe check" into a quantitative report.
@@ -173,11 +132,11 @@ IMPORTANT CONSTRAINTS (must comply):
 - Local dev/demo first. Do NOT implement cloud-specific managed services in this version.
 - Python 3.12, FastAPI, Pydantic v2, httpx, pytest.
 - Default behavior uses a deterministic MOCK LLM unless OPENAI_API_KEY is set.
-- The mock LLM must achieve 100% accuracy on the provided golden dataset (5 cases).
+- The mock LLM must achieve 100% accuracy on the provided golden dataset (all cases in data/golden_dataset.json).
 - GitHub actions are DRY-RUN by default, with an option to enable real calls.
 - Webhook signature verification implemented (HMAC X-Hub-Signature-256) if WEBHOOK_SECRET is set; if not set, allow but warn.
 - Issues only (no PRs, no comments). Handle GitHub `issues` event actions `opened` and `edited` (configurable).
-- Provide BOTH local simulation (curl + sample payload + eval script) AND real GitHub webhook demo instructions via a tunnel (ngrok/cloudflared).
+- Provide BOTH local simulation (curl + sample payload + eval script) AND real GitHub webhook demo instructions via a tunnel (ngrok).
 - No “TODOs” for core features. Provide clean, readable code with type hints.
 
 ================================================================================
@@ -202,7 +161,6 @@ issue-triager/
       __init__.py
       base.py              # LLM interface protocol
       mock.py              # deterministic rules-based mock -> MUST hit 100% on golden dataset
-      gemini.py            # Gemini Developer API client using GEMINI_API_KEY
     agent.py               # orchestrates: load policy -> call llm -> validate -> action plan
     github_client.py       # GitHub REST client (label + comment)
     webhook_security.py    # signature verification + event filtering
@@ -253,10 +211,10 @@ Webhook/security:
 - ALLOWED_EVENT: str = "issues"
 
 LLM:
-- GEMINI_API_KEY: Optional[str] = None
-- GEMINI_MODEL: str = "gemini-1.5-flash" (configurable)
+- OPENAI_API_KEY: Optional[str] = None
+- OPENAI_MODEL: str = "gpt-4o-mini" (configurable)
 - LLM_TIMEOUT_SECONDS: int = 20
-Behavior: if GEMINI_API_KEY is set -> use Gemini Developer API, else use MockLLM.
+Behavior: if OPENAI_API_KEY is set -> use ChatGPT client, else use MockLLM.
 
 GitHub actions:
 - DRY_RUN: bool = True (DEFAULT)
@@ -266,7 +224,7 @@ GitHub actions:
 ================================================================================
 DATA: GOLDEN DATASET
 ================================================================================
-Create data/golden_dataset.json EXACTLY as provided in the design doc (TC001..TC005). Preserve fields. Do not “improve” wording.
+Create data/golden_dataset.json using the provided cases TC001..TC030. Preserve fields. Do not “improve” wording.
 
 ================================================================================
 SCHEMAS (STRICT JSON CONTRACT)
@@ -321,9 +279,9 @@ If JSON invalid or schema validation fails -> return a fallback TriageResult:
 - matched_rules=["Fallback:InvalidLLMOutput"]
 
 ================================================================================
-MOCK LLM (CRITICAL: MUST HIT 100% ON 5 CASES)
+MOCK LLM (CRITICAL: MUST HIT 100% ON ALL CASES)
 ================================================================================
-Implement app/llm/mock.py as a deterministic rules engine approximating the policy. It must return a full TriageResult and MUST classify TC001..TC005 exactly as expected.
+Implement app/llm/mock.py as a deterministic rules engine approximating the policy. It must return a full TriageResult and MUST classify every case in data/golden_dataset.json exactly as expected.
 
 Required rules (ensure these cover all 5 cases):
 - If text mentions Production OR “prod” in a context of outage, gateway errors, customer impact => HIGH
@@ -344,26 +302,13 @@ Also:
 Include matched_rules strings like: “HIGH: Production”, “Rule B: Loud User”, etc.
 
 ================================================================================
-GEMINI DEVELOPER API CLIENT (OPTIONAL PATH WHEN GEMINI_API_KEY SET)
-================================================================================
-Implement app/llm/gemini.py using httpx to call Gemini Developer API.
-Requirements:
-- Use GEMINI_API_KEY and GEMINI_MODEL.
-- Keep implementation minimal and documented.
-- Make request/response robust with timeouts.
-- Return text output that should be JSON.
-- If API fails -> use the same fallback TriageResult as invalid output.
-Do not overcomplicate. It’s okay if you implement the REST endpoint that matches current Gemini Developer API patterns, but keep it configurable and document in README.
-(If you are uncertain about exact endpoint payload shape, implement a very small adapter and clearly document how to adjust; but still provide a best-effort working default.)
-
-================================================================================
 AGENT ORCHESTRATION
-================================================================================
+================================================================================ 
 Implement app/agent.py:
 - def triage_issue(title: str, body: str, repo: str|None, url: str|None) -> TriageResult
 - Loads criteria text from TRIAGE_CRITERIA.md
 - Builds prompt
-- Calls chosen LLM client (mock or gemini)
+- Calls chosen LLM client (mock or ChatGPT)
 - Validates/normalizes labels
 - Applies Rule D safety net if too vague (force LOW and record the matched rule)
 - Returns result
@@ -433,8 +378,8 @@ Implement pytest tests:
    - verify true/false cases
 2) test_mock_llm_golden_dataset.py:
    - load golden dataset
-   - run triage_issue with mock (force mock by ensuring GEMINI_API_KEY not set)
-   - assert predicted == expected for all 5
+   - run triage_issue with mock (force mock by ensuring OPENAI_API_KEY not set)
+   - assert predicted == expected for all cases
 3) test_agent_vague_issue.py:
    - title/body short -> must be LOW and include the Rule D match
 4) test_webhook_endpoint_smoke.py:
@@ -452,7 +397,7 @@ DOCKER + MAKEFILE
   - make test
   - make eval
   - make curl-demo (sends a sample webhook payload to localhost; include signature if WEBHOOK_SECRET set)
-  - make tunnel-demo (prints instructions for ngrok/cloudflared; do not actually run external tools)
+  - make tunnel-demo (prints instructions for ngrok; do not actually run external tools)
 
 ================================================================================
 README (DEMO-READY)
@@ -466,8 +411,8 @@ Write a strong README that includes:
   3) make run
   4) make eval
   5) make curl-demo
-- Real GitHub webhook demo (both):
-  - Using ngrok OR cloudflared:
+- Real GitHub webhook demo:
+  - Using ngrok:
     - Start server
     - Start tunnel
     - Create webhook in GitHub repo settings pointing to /webhook/github
@@ -478,9 +423,9 @@ Write a strong README that includes:
 - DRY_RUN behavior:
   - default true: prints intended label/comment
   - how to enable real calls: set DRY_RUN=false and set GITHUB_TOKEN
-- Gemini Developer API mode:
-  - set GEMINI_API_KEY and optionally GEMINI_MODEL
-  - explain that Gemini must output strict JSON; fallback occurs otherwise
+- ChatGPT mode:
+  - set OPENAI_API_KEY and optionally OPENAI_MODEL
+  - model must output strict JSON; fallback occurs otherwise
 
 ================================================================================
 QUALITY BAR
