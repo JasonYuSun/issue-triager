@@ -62,10 +62,20 @@ async def execute_actions(
     gh = Github(login_or_token=settings.GITHUB_TOKEN, base_url=settings.GITHUB_API_BASE)
     issue = gh.get_repo(repo_full_name).get_issue(number=issue_number)
 
-    # PyGithub returns objects; keep responses lightweight for logging/testing.
-    label_resp = [lbl.name for lbl in issue.add_to_labels(label)]
-    comment_obj = issue.create_comment(comment_body)
-    comment_resp = {"id": comment_obj.id, "url": comment_obj.html_url}
+    # PyGithub add_to_labels may return None; treat as fire-and-forget and echo the intended label.
+    try:
+        issue.add_to_labels(label)
+    except Exception as exc:  # pragma: no cover - external API path
+        logger.error("Failed to add label via GitHub API: %s", exc)
+        raise
+    label_resp = {"label": label}
+
+    try:
+        comment_obj = issue.create_comment(comment_body)
+        comment_resp = {"id": comment_obj.id, "url": comment_obj.html_url}
+    except Exception as exc:  # pragma: no cover - external API path
+        logger.error("Failed to create comment via GitHub API: %s", exc)
+        raise
 
     if result.notify_on_call:
         logger.info("Action required for %s#%s: would notify on-call.", repo_full_name, issue_number)

@@ -20,7 +20,7 @@ class Settings(BaseSettings):
     LOG_LEVEL: str = "INFO"
 
     WEBHOOK_SECRET: Optional[str] = None
-    ALLOWED_ACTIONS: str = "opened,edited"
+    ALLOWED_ACTIONS: str = "opened"
     ALLOWED_EVENT: str = "issues"
 
     OPENAI_API_KEY: Optional[str] = None

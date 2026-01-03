@@ -29,7 +29,7 @@ LLM selection:
 ## Webhook usage
 - Endpoint: `POST /webhook/github`
 - Headers: `X-GitHub-Event: issues`, `X-Hub-Signature-256` (required only if `WEBHOOK_SECRET` is set).
-- Supported actions: `opened`, `edited` (configurable via `ALLOWED_ACTIONS`).
+- Supported actions: `opened` (default). Other issue actions (e.g., `edited`, `closed`) are ignored with a 2xx response so GitHub deliveries stay green; adjust via `ALLOWED_ACTIONS` if you want more.
 - If `TRIAGE_CRITERIA.md` is missing, the API returns 500 with a clear error.
 
 ## Real GitHub demo (via tunnel)

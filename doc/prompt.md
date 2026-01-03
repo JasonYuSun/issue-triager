@@ -205,7 +205,7 @@ Define Settings in app/config.py with defaults:
 
 Webhook/security:
 - WEBHOOK_SECRET: Optional[str] = None
-- ALLOWED_ACTIONS: set[str] default {"opened","edited"} (configurable via env as comma-separated)
+- ALLOWED_ACTIONS: set[str] default {"opened"} (configurable via env as comma-separated)
 - ALLOWED_EVENT: str = "issues"
 
 LLM:
