@@ -22,9 +22,8 @@ curl-demo:
 
 tunnel-demo:
 	@echo "1) Start the server locally: make run"
-	@echo "2) Start a tunnel (ngrok or cloudflared):"
-	@echo "   - ngrok: ngrok http $${PORT:-8080}"
-	@echo "   - cloudflared: cloudflared tunnel --url http://localhost:$${PORT:-8080}"
+	@echo "2) Start a tunnel (ngrok):"
+	@echo "   - ngrok http $${PORT:-8080}"
 	@echo "3) In GitHub repo settings, add a Webhook pointing to <tunnel-url>/webhook/github"
 	@echo "   - Content-Type: application/json"
 	@echo "   - Secret: set to WEBHOOK_SECRET from your .env"

@@ -2,7 +2,7 @@
 
 ### Prerequisites
 - Running local server: `make run` (listens on `http://localhost:8080`).
-- Public URL via tunnel (ngrok or cloudflared). Example: `https://<id>.ngrok.io`.
+- Public URL via tunnel (ngrok). Example: `https://<id>.ngrok.io`.
 - Shared secret value (optional but recommended) saved to your `.env` as `WEBHOOK_SECRET=...`.
 
 ### Add the webhook in GitHub
