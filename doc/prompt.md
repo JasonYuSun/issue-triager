@@ -117,13 +117,6 @@ This script automates the "vibe check" into a quantitative report.
 - **Comparison**: Compares Agent output vs. Expected result.
 - **Reporting**: Generates an Accuracy Score (%) and a Confusion Matrix.
 
-## 8. Future Roadmap
-- Multimodal Support: Use ChatGPT's multimodal capabilities to analyze screenshots of errors or architecture diagrams attached to issues.
-- Issue-Resolution-Recommender: Use ChatGPT's long context window to build a system that can analyze a large number of issues and recommend most similar issues as reference to resolve the issue.
-
-## 9. Security & Compliance
-- Data Residency: Deploy within your chosen cloud region (e.g., australia-southeast1).
-- Anonymization: Implementation of a pre-processing layer to scrub credentials and PII from issue descriptions before LLM ingestion.
 ```
 
 Goal: Implement a local-first “agentic triage bot” that receives GitHub Issue webhooks, dynamically loads a version-controlled triage policy (TRIAGE_CRITERIA.md), asks an LLM (mock by default, ChatGPT only if OPENAI_API_KEY is set) to return a STRICT JSON contract, validates it with Pydantic, and then (dry-run by default) performs actions: label + comment via GitHub REST API using a PAT, and logs notifications.
