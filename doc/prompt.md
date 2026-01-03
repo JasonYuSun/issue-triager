@@ -148,8 +148,6 @@ issue-triager/
   .gitignore
   .env.example
   Makefile
-  docker/
-    Dockerfile
   app/
     __init__.py
     main.py                # FastAPI entry
@@ -388,9 +386,8 @@ Implement pytest tests:
    - assert 200 and includes triage fields
 
 ================================================================================
-DOCKER + MAKEFILE
+MAKEFILE
 ================================================================================
-- docker/Dockerfile: python:3.12-slim, install deps, run uvicorn app.main:app --host 0.0.0.0 --port ${PORT}
 - Makefile targets:
   - make install (create venv optional or just pip install -e .)
   - make run (uvicorn with reload)
