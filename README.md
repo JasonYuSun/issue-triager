@@ -1,6 +1,87 @@
 # issue-triager
 
-Agentic triage bot for GitHub Issues. It ingests GitHub issue webhooks, dynamically loads `TRIAGE_CRITERIA.md`, asks an LLM (deterministic mock by default), validates the JSON contract with Pydantic, and (dry-run by default) applies labels/comments via GitHub’s API.
+Agentic triage bot for GitHub Issues. **issue-triager** is an AI agent designed to automate the initial classification of DevOps support tickets. It dynamically loads `TRIAGE_CRITERIA.md`, asks an LLM to identify the priority of the issue, applies the appropriate label and comment and take actions accordingly. It acts as an interface between the customer and the support team to identify which issues require immediate attention and which can stay in the queue waiting for pickup.
+
+## The Problem Statement: The Triage Dilemma
+In a fast-paced DevOps environment, the "Support Channel" repository often suffers from two triage dilemmas:
+
+- **Manual Triage Delay**: If the Support Team is responsible for triage, they must context-switch constantly, or high-priority issues sit in the queue for too long.
+- **Inconsistent User Triage**: If customers (developers) triage their own issues, they often lack the "big picture" (e.g., understanding how a failure in a shared network component affects the whole company), leading to either "over-triaging" (marking everything as High) or "under-triaging" (missing critical outages).
+
+## The Solution: Agentic AI
+Unlike a simple keyword-based script, an Agentic AI solution can:
+
+- **Understand Long Context**: Interpret the nuance of an issue description.
+- **Make Judgments**: Compare the issue against a dynamic, version-controlled Triage Criteria document.
+- **Take Action**: Not just categorize, but perform API calls to label issues, leave explanatory comments, and push notifications when on-call attention is required, potentially identifying the risky behavior from the issue description and alerting the relevant stakeholders, or calling other agents to enrich the issue, enabling customer self-service.
+
+```mermaid
+graph TD
+    %% --- Definitions & Styling ---
+    classDef human fill:#f9fbb2,stroke:#d4a373,stroke-width:2px,color:#000;
+    classDef github fill:#24292e,stroke:#fff,stroke-width:2px,color:#fff;
+    classDef agent fill:#d4edda,stroke:#28a745,stroke-width:3px,color:#000;
+    classDef llm fill:#e2cdff,stroke:#6f42c1,stroke-width:2px,color:#000;
+    classDef storage fill:#fff3cd,stroke:#ffc107,stroke-width:2px,stroke-dasharray: 5 5,color:#000;
+    classDef future fill:#e9ecef,stroke:#6c757d,stroke-width:2px,stroke-dasharray: 5 5,color:#6c757d;
+
+    %% --- Nodes ---
+    Customer(Customer / Developer):::human
+    GH_Issue[GitHub Issue Created]:::github
+    
+    subgraph "Agentic Triage System"
+        Agent(issue-triager Agent):::agent
+        CriteriaDoc(Load TRIAGE_CRITERIA.md):::storage
+        LLM_Brain(LLM Brain / Judgment):::llm
+    end
+
+    Decision{Is Priority HIGH?}:::agent
+    
+    subgraph "Immediate Action Path (High)"
+        LabelHigh[Apply Label: HIGH]:::github
+        CommentHigh[Post Reasoning Comment]:::github
+        PushTeam(Request Immediate Attention):::human
+    end
+
+    subgraph "Standard Routine Path (Med/Low)"
+        LabelStd[Apply Label: MED or LOW]:::github
+        CommentStd[Post Reasoning Comment]:::github
+        IssuePool(Leave in Issue Pool / Wait for Pickup):::storage
+    end
+
+    %% --- Future Nodes ---
+    FutureNotify[Future: Trigger Slack/PagerDuty Notification]:::future
+    FutureTools[Future: Based on Issue Content Call Tools / Other Agents for Enrichment]:::future
+
+    %% --- Main Flow ---
+    Customer -->|Submits Support Ticket| GH_Issue
+    GH_Issue -->|Webhook Trigger| Agent
+    
+    Agent -->|1. Read Issue Content| GH_Issue
+    Agent -->|2. Fetch Rules| CriteriaDoc
+    CriteriaDoc -.-> Agent
+    
+    Agent -->|3. Send Context + Rules| LLM_Brain
+    LLM_Brain -->|4. Return Structured Judgment JSON| Agent
+
+    %% --- Future Work Branching (Pre-action) ---
+    Agent -.->|Optional| FutureTools
+    FutureTools -.-> Agent
+
+    %% --- Decision & Action Flow ---
+    Agent --> Decision
+    
+    %% High Priority Branch
+    Decision -->|Yes| LabelHigh
+    LabelHigh --> CommentHigh
+    CommentHigh --> PushTeam
+    PushTeam -.->|Escalation| FutureNotify
+
+    %% Standard Branch
+    Decision -->|No| LabelStd
+    LabelStd --> CommentStd
+    CommentStd --> IssuePool
+```
 
 ## Architecture
 - FastAPI webhook endpoint at `/webhook/github`.
@@ -60,5 +141,5 @@ LLM selection:
 - `app/llm/mock.py`: deterministic rules hitting 100% on the golden dataset.
 - `app/llm/chatgpt.py`: minimal ChatGPT client.
 - `app/webhook_security.py`: HMAC SHA256 verification.
-- `data/golden_dataset.json`: evaluation cases TC001–TC005.
+- `data/golden_dataset.json`: evaluation cases TC001–TC030.
 - `TRIAGE_CRITERIA.md`: triage policy loaded at runtime; edits here change behavior without code changes.
