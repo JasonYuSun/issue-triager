@@ -27,7 +27,7 @@ class MockLLM(BaseLLM):
             return json.dumps(
                 {
                     "priority": golden_match,
-                    "action_required": golden_match == "HIGH",
+                    "notify_on_call": golden_match == "HIGH",
                     "labels": [f"priority:{golden_match.lower()}"],
                     "reasoning": "Matched golden dataset case.",
                     "confidence": 0.99,
@@ -40,7 +40,7 @@ class MockLLM(BaseLLM):
 
         priority = "LOW"
         matched_rules: List[str] = []
-        action_required = False
+        notify_on_call = False
         confidence = 0.75
         reasoning = "Defaulting to LOW priority based on provided context."
 
@@ -68,7 +68,7 @@ class MockLLM(BaseLLM):
                 reasoning = "Production outage or customer impact described."
 
             if priority == "HIGH":
-                action_required = True
+                notify_on_call = True
                 confidence = 0.92
                 if "shared-vpc-01" in text and "Rule C: Critical Infrastructure Protection" not in matched_rules:
                     matched_rules.append("Rule C: Critical Infrastructure Protection")
@@ -103,7 +103,7 @@ class MockLLM(BaseLLM):
         labels = [f"priority:{priority.lower()}"]
         result = {
             "priority": priority,
-            "action_required": action_required,
+            "notify_on_call": notify_on_call,
             "labels": labels,
             "reasoning": reasoning,
             "confidence": round(confidence, 3),

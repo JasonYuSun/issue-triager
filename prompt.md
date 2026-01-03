@@ -63,7 +63,7 @@ The Agent does not just "suggest"; it "acts" by consuming the JSON output:
 
 - **Labeling**: Calls the GitHub API to apply the `priority:{level}` label.
 - **Commenting**: Posts the reasoning as a public comment on the issue. This provides transparency to the user and the support team.
-- **Notification**: If `action_required` is True, the Agent logs that on-call notification would be sent (no external integrations in this version).
+- **Notification**: If `notify_on_call` is True, the Agent logs that on-call notification would be sent (no external integrations in this version).
 
 ## 6. The "Brain": TRIAGE_CRITERIA.md
 The agent uses this document as its System Instruction. It is stored in the repository, allowing the team to update triage logic via Pull Requests without changing a single line of Python code.
@@ -235,7 +235,7 @@ In app/schemas.py define:
 
 2) TriageResult(BaseModel):
 - priority: TriagePriority
-- action_required: bool
+- notify_on_call: bool
 - labels: list[str]
 - reasoning: str
 - confidence: float (0..1)
@@ -272,7 +272,7 @@ User message:
 LLM output must be parsed as JSON. If the LLM returns fenced code blocks, strip fences.
 If JSON invalid or schema validation fails -> return a fallback TriageResult:
 - priority="LOW"
-- action_required=false
+- notify_on_call=false
 - labels=["priority:low"]
 - reasoning="LLM output invalid; requesting more information."
 - confidence=0.0
@@ -283,7 +283,7 @@ MOCK LLM (CRITICAL: MUST HIT 100% ON ALL CASES)
 ================================================================================
 Implement app/llm/mock.py as a deterministic rules engine approximating the policy. It must return a full TriageResult and MUST classify every case in data/golden_dataset.json exactly as expected.
 
-Required rules (ensure these cover all 5 cases):
+Required rules (cover every golden case):
 - If text mentions Production OR “prod” in a context of outage, gateway errors, customer impact => HIGH
 - If mentions security leak, public bucket, “Block Public Access”, vulnerability => HIGH
 - If mentions any critical infra keywords listed in policy Rule C (shared-vpc-01, root-dns-zone, global-iam-policy) => HIGH AND include matched_rules with “Rule C”
@@ -296,7 +296,7 @@ Also:
 - For TC004: despite “Urgent!!” and caps, because sandbox cluster & css demo => LOW; include matched_rules with “Rule B”
 - For each result produce:
   - labels: exactly ["priority:high"] or ["priority:medium"] or ["priority:low"]
-  - action_required: True only for HIGH, False otherwise (for demo)
+  - notify_on_call: True only for HIGH, False otherwise (for demo)
   - confidence: set high for clear matches (e.g., 0.9+), lower for vague.
 
 Include matched_rules strings like: “HIGH: Production”, “Rule B: Loud User”, etc.
@@ -319,7 +319,7 @@ Also implement an “action plan”:
 - If DRY_RUN=false: require GITHUB_TOKEN; call GitHub:
    1) apply label `priority:xxx`
    2) post comment including reasoning, confidence, matched_rules
-- Notification path: just log a message when action_required=true (no slack, no pubsub).
+- Notification path: just log a message when notify_on_call=true (no external integrations).
 
 ================================================================================
 WEBHOOK SERVER

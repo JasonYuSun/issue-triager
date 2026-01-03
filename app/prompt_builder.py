@@ -20,7 +20,7 @@ def build_prompts(
         The JSON must match this schema exactly:
         {{
           "priority": "HIGH|MEDIUM|LOW",
-          "action_required": true/false,
+          "notify_on_call": true/false,
           "labels": ["priority:high|medium|low"],
           "reasoning": "short rationale",
           "confidence": 0.0-1.0,
@@ -29,7 +29,7 @@ def build_prompts(
         Example:
         {{
           "priority": "HIGH",
-          "action_required": true,
+          "notify_on_call": true,
           "labels": ["priority:high"],
           "reasoning": "Production outage impacting customers.",
           "confidence": 0.91,

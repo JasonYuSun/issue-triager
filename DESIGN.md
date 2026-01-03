@@ -59,7 +59,7 @@ The Agent does not just "suggest"; it "acts" by consuming the JSON output:
 
 - **Labeling**: Calls the GitHub API to apply the `priority:{level}` label.
 - **Commenting**: Posts the reasoning as a public comment on the issue. This provides transparency to the user and the support team.
-- **Notification**: If `action_required` is True, the Agent logs that on-call notification would be sent (no external integrations in this version).
+- **Notification**: If `notify_on_call` is True, the Agent logs that on-call notification would be sent (no external integrations in this version).
 
 ## 6. The "Brain": TRIAGE_CRITERIA.md
 The agent uses this document as its System Instruction. It is stored in the repository, allowing the team to update triage logic via Pull Requests without changing a single line of Python code.

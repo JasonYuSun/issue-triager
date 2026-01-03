@@ -9,7 +9,7 @@ TriagePriority = Literal["HIGH", "MEDIUM", "LOW"]
 
 class TriageResult(BaseModel):
     priority: TriagePriority
-    action_required: bool
+    notify_on_call: bool
     labels: List[str] = Field(default_factory=list)
     reasoning: str
     confidence: float

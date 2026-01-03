@@ -52,7 +52,7 @@ async def execute_actions(
                 {"action": "add_label", "label": label, "issue": issue_number, "repo": repo_full_name},
                 {"action": "comment", "body": comment_body},
             ],
-            "notification": "on" if result.action_required else "off",
+            "notification": "on" if result.notify_on_call else "off",
         }
 
     if not settings.GITHUB_TOKEN:
@@ -63,14 +63,14 @@ async def execute_actions(
     label_resp = await client.add_label(repo_full_name, issue_number, label)
     comment_resp = await client.add_comment(repo_full_name, issue_number, comment_body)
 
-    if result.action_required:
+    if result.notify_on_call:
         logger.info("Action required for %s#%s: would notify on-call.", repo_full_name, issue_number)
 
     return {
         "mode": "live",
         "applied_label": label_resp,
         "comment": comment_resp,
-        "notification": "sent" if result.action_required else "skipped",
+        "notification": "sent" if result.notify_on_call else "skipped",
     }
 
 
@@ -102,7 +102,10 @@ def _strip_code_fences(text: str) -> str:
 
 def _normalize_triage_dict(data: Dict[str, Any]) -> Dict[str, Any]:
     priority = str(data.get("priority", "LOW")).upper()
-    action_required = bool(data.get("action_required", False))
+    notify_on_call = data.get("notify_on_call")
+    if notify_on_call is None:
+        notify_on_call = data.get("action_required", False)
+    notify_on_call = bool(notify_on_call)
     confidence_raw = data.get("confidence", 0.0)
     try:
         confidence = float(confidence_raw)
@@ -121,7 +124,7 @@ def _normalize_triage_dict(data: Dict[str, Any]) -> Dict[str, Any]:
 
     return {
         "priority": priority,
-        "action_required": action_required,
+        "notify_on_call": notify_on_call,
         "labels": labels,
         "reasoning": reasoning,
         "confidence": confidence,
@@ -139,7 +142,7 @@ def _apply_vague_guard(result: TriageResult, title: str, body: str | None) -> Tr
             matched.append("Rule D: Insufficient Information")
         return TriageResult(
             priority="LOW",
-            action_required=False,
+            notify_on_call=False,
             labels=[label],
             reasoning="Issue too vague to triage confidently; requesting more details.",
             confidence=min(result.confidence, 0.2),
@@ -151,7 +154,7 @@ def _apply_vague_guard(result: TriageResult, title: str, body: str | None) -> Tr
 def _fallback_result() -> TriageResult:
     return TriageResult(
         priority="LOW",
-        action_required=False,
+        notify_on_call=False,
         labels=["priority:low"],
         reasoning="LLM output invalid; requesting more information.",
         confidence=0.0,
