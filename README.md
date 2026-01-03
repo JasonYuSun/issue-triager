@@ -34,19 +34,13 @@ LLM selection:
 
 ## Real GitHub demo (via tunnel)
 1) Start the server locally: `make run`.
-2) Start a tunnel (choose one):
-   - `ngrok http 8080`
-   - `cloudflared tunnel --url http://localhost:8080`
-3) In GitHub repo settings > Webhooks:
-   - Payload URL: `<tunnel-url>/webhook/github`
-   - Content type: `application/json`
-   - Secret: value of `WEBHOOK_SECRET` from `.env`
-   - Events: Issues
+2) Start a tunnel (ngrok): see `doc/ngrok.md` for install/auth/start steps.
+3) In GitHub repo settings > Webhooks: see `doc/github-webhook.md` for exact form values.
 4) Trigger issue opened/edited events. Codex cannot configure GitHub for you; paste the secret and URL yourself.
 
 ## DRY_RUN vs live actions
 - Default `DRY_RUN=true`: response includes intended label/comment without calling GitHub.
-- To enable live actions: set `DRY_RUN=false` and `GITHUB_TOKEN=<PAT with repo scope>`. The bot adds `priority:*` label and posts a comment summarizing reasoning and matched rules.
+- To enable live actions: set `DRY_RUN=false` and `GITHUB_TOKEN=<PAT with repo scope>`. The bot adds `priority:*` label and posts a comment summarizing reasoning and matched rules. See `doc/github-pat.md` for PAT setup.
 
 ## ChatGPT mode
 - Set `OPENAI_API_KEY` (and optionally `OPENAI_MODEL`) to use ChatGPT instead of the mock.
@@ -54,6 +48,11 @@ LLM selection:
 
 ## Local simulation via curl helper
 - `make curl-demo` sends a demo payload to `WEBHOOK_URL` (defaults to `http://localhost:8080/webhook/github`). If `WEBHOOK_SECRET` is set, the script signs the request.
+
+## Additional docs
+- `doc/ngrok.md`: installing/configuring ngrok and starting a tunnel.
+- `doc/github-webhook.md`: creating and testing the GitHub webhook for issue-triager.
+- `doc/github-pat.md`: creating and configuring a GitHub Personal Access Token for live actions.
 
 ## Files of interest
 - `app/main.py`: FastAPI webhook handler.
